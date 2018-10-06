@@ -37,7 +37,7 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    if(connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr) < 0))
+    if(connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
     {
 
         cout << "connect socket error: " << strerror(errno) << "(errno: " << errno << ")\n";

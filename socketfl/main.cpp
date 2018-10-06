@@ -3,12 +3,34 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/fcntl.h>
 
 using std::cout;
 
 #define  MAXLINE 4096
+
+void err_sys(const char* errstr)
+{
+    printf("%s: %d(%s)\n", errstr, errno, strerror(errno));
+    exit(-1);
+}
+
+void print_client_info(int sockfd)
+{
+    struct sockaddr_in sockadd;
+    socklen_t socklen;
+    if(getpeername(sockfd, (struct sockaddr*)&sockadd, &socklen) < 0)
+        err_sys("getpeername error in print_client_info()");
+    uint16_t port = ntohs(sockadd.sin_port);
+    char* ipaddr_str = inet_ntoa(sockadd.sin_addr);
+
+    printf("accept a client from %s with port %d\n",ipaddr_str, port);
+}
 
 int main(int argc, char** argv)
 {
@@ -40,7 +62,7 @@ int main(int argc, char** argv)
         cout << "listen socket error: " << strerror(errno) << "(errno: " << errno << ")\n";
         exit(0);
     }
-    cout << "======waiting for client's request======/n";
+    cout << "======waiting for client's request======\n";
     while(1)
     {
         if((connfd = accept(listenfd, (struct sockaddr*)NULL, NULL)) == -1)
@@ -48,6 +70,7 @@ int main(int argc, char** argv)
             cout << "accept socket error: " << strerror(errno) << "(errno: " << errno << ")\n";
             continue;
         }
+        print_client_info(connfd);
         n = recv(connfd, buff, MAXLINE, 0);
         buff[n] = '\0';
         cout << "recv msg from client: %s\n" << buff;
